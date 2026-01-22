@@ -125,25 +125,37 @@ export default function TimesheetsSummaryPage() {
     }
   };
 
+  // Helper to get date key in local timezone (YYYY-MM-DD)
+  const getLocalDateKey = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Build the weekly grid data - now stores timesheet IDs for editing
   const buildWeeklyGrid = () => {
     const grid: Record<string, Record<string, { hours: number; timesheetId: string | null }>> = {};
+
+    // Get week date keys for comparison
+    const weekDateKeys = weekDates.map(d => getLocalDateKey(d));
 
     // Initialize grid with all operatives
     users.forEach(user => {
       grid[user.id] = {};
       weekDates.forEach(date => {
-        grid[user.id][date.toISOString().split("T")[0]] = { hours: 0, timesheetId: null };
+        grid[user.id][getLocalDateKey(date)] = { hours: 0, timesheetId: null };
       });
     });
 
     // Fill in timesheet data
     timesheets.forEach(ts => {
       const tsDate = new Date(ts.date);
-      const dateKey = tsDate.toISOString().split("T")[0];
+      // Use the date part from ISO string (this is how it's stored in DB)
+      const dateKey = ts.date.split("T")[0];
 
       // Check if this timesheet falls within the current week view
-      if (tsDate >= weekStart && tsDate <= weekEnd) {
+      if (weekDateKeys.includes(dateKey)) {
         if (!grid[ts.user.id]) {
           grid[ts.user.id] = {};
         }
@@ -171,7 +183,7 @@ export default function TimesheetsSummaryPage() {
   };
 
   const calculateColumnTotal = (date: Date): number => {
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = getLocalDateKey(date);
     return Object.values(weeklyGrid).reduce((sum, userDays) => {
       return sum + (userDays[dateKey]?.hours || 0);
     }, 0);
@@ -398,7 +410,7 @@ export default function TimesheetsSummaryPage() {
                         £{user.hourlyRate.toFixed(2)}
                       </td>
                       {weekDates.map((date, idx) => {
-                        const dateKey = date.toISOString().split("T")[0];
+                        const dateKey = getLocalDateKey(date);
                         const cell = weeklyGrid[user.id]?.[dateKey];
                         const hours = cell?.hours || 0;
                         const isEditing = editingCell?.userId === user.id && editingCell?.dateKey === dateKey;
