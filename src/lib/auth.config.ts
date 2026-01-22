@@ -1,21 +1,9 @@
 import type { NextAuthConfig } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
 
-// This is the edge-compatible auth config (no bcrypt, no prisma)
-// Used by middleware for JWT verification only
+// Edge-compatible auth config (no providers, no bcrypt, no prisma)
+// Only used by middleware for JWT verification
 export const authConfig: NextAuthConfig = {
-  providers: [
-    // Credentials provider stub - actual auth happens in auth.ts
-    Credentials({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      // This won't be called in middleware - just needed for types
-      authorize: () => null,
-    }),
-  ],
+  providers: [], // Empty - actual providers are in auth.ts
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
