@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  password    String      // bcrypt hashed
+  name        String
+  role        Role        @default(OPERATIVE)
+  hourlyRate  Float       @default(20.0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  timesheets  Timesheet[]
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  location    String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  timesheets  Timesheet[]
+}
+
+model Timesheet {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  date          DateTime
+  hoursWorked   Float
+  notes         String?
+  status        Status   @default(PENDING)
+  lastEditedBy  String?  // User ID who last edited this entry
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([date])
+}
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  OPERATIVE
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}

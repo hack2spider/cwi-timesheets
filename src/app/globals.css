@@ -2,12 +2,32 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
+  --primary: #1e40af;
+  --primary-hover: #1e3a8a;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --success: #16a34a;
+  --error: #dc2626;
+  --border: #e5e7eb;
+  --muted: #374151;
+  --table-header-bg: #f9fafb;
+  --table-text: #1f2937;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-table-header-bg: var(--table-header-bg);
+  --color-table-text: var(--table-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -16,6 +36,8 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --border: #374151;
+    --muted: #9ca3af;
   }
 }
 
@@ -23,4 +45,23 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Table styles for better contrast */
+table {
+  color: var(--table-text);
+}
+
+table th {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+table td {
+  color: var(--table-text);
+}
+
+/* Card and grid content */
+.bg-white {
+  color: var(--table-text);
 }
