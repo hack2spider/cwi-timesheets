@@ -285,7 +285,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Link
           href="/admin/users"
           className="bg-primary text-white rounded-lg shadow-md p-6 hover:bg-primary-hover transition-colors"
@@ -307,6 +307,15 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-semibold mb-2">Timesheets Summary</h2>
           <p className="text-sm opacity-80">View all timesheets by operative, project, and date</p>
         </Link>
+        {session?.user?.role === "ADMIN" && (
+          <Link
+            href="/admin/supervisor-assignments"
+            className="bg-purple-600 text-white rounded-lg shadow-md p-6 hover:bg-purple-700 transition-colors"
+          >
+            <h2 className="text-xl font-semibold mb-2">Supervisor Access</h2>
+            <p className="text-sm opacity-80">Assign supervisors to specific projects</p>
+          </Link>
+        )}
       </div>
 
       {/* Monthly Presence & Hours Chart */}

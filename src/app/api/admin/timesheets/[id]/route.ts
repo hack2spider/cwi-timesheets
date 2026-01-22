@@ -33,6 +33,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
     }
 
+    // Check if supervisor has access to this project
+    if (session.user.role === "SUPERVISOR") {
+      const hasAccess = await prisma.supervisorProject.findUnique({
+        where: {
+          userId_projectId: {
+            userId: session.user.id,
+            projectId: originalTimesheet.projectId,
+          },
+        },
+      });
+
+      if (!hasAccess) {
+        return NextResponse.json(
+          { error: "You do not have access to edit timesheets for this project" },
+          { status: 403 }
+        );
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       lastEditedBy: session.user.id,
     };
@@ -120,6 +139,25 @@ export async function DELETE(
 
     if (!timesheet) {
       return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
+    }
+
+    // Check if supervisor has access to this project
+    if (session.user.role === "SUPERVISOR") {
+      const hasAccess = await prisma.supervisorProject.findUnique({
+        where: {
+          userId_projectId: {
+            userId: session.user.id,
+            projectId: timesheet.projectId,
+          },
+        },
+      });
+
+      if (!hasAccess) {
+        return NextResponse.json(
+          { error: "You do not have access to delete timesheets for this project" },
+          { status: 403 }
+        );
+      }
     }
 
     await prisma.timesheet.delete({

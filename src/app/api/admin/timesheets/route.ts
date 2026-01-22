@@ -43,7 +43,21 @@ export async function GET(request: NextRequest) {
       take: 500, // Increased limit to get more timesheets for the summary
     });
 
-    return NextResponse.json(timesheets);
+    // Fetch editor names for timesheets that have lastEditedBy
+    const editorIds = [...new Set(timesheets.filter(t => t.lastEditedBy).map(t => t.lastEditedBy as string))];
+    const editors = editorIds.length > 0 ? await prisma.user.findMany({
+      where: { id: { in: editorIds } },
+      select: { id: true, name: true },
+    }) : [];
+    const editorMap = new Map(editors.map(e => [e.id, e.name]));
+
+    // Add editor name to each timesheet
+    const timesheetsWithEditor = timesheets.map(ts => ({
+      ...ts,
+      lastEditedByName: ts.lastEditedBy ? editorMap.get(ts.lastEditedBy) || null : null,
+    }));
+
+    return NextResponse.json(timesheetsWithEditor);
   } catch (error) {
     console.error("Error fetching timesheets:", error);
     return NextResponse.json({ error: "Failed to fetch timesheets" }, { status: 500 });
@@ -88,6 +102,25 @@ export async function POST(request: NextRequest) {
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Check if supervisor has access to this project
+    if (session.user.role === "SUPERVISOR") {
+      const hasAccess = await prisma.supervisorProject.findUnique({
+        where: {
+          userId_projectId: {
+            userId: session.user.id,
+            projectId,
+          },
+        },
+      });
+
+      if (!hasAccess) {
+        return NextResponse.json(
+          { error: "You do not have access to create timesheets for this project" },
+          { status: 403 }
+        );
+      }
     }
 
     const timesheet = await prisma.timesheet.create({

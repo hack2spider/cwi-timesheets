@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         hoursWorked: parseFloat(hoursWorked),
         notes: notes || null,
         status: "PENDING",
+        lastEditedBy: session.user.id,
       },
       include: { project: true },
     });

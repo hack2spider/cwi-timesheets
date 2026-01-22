@@ -307,7 +307,7 @@ export default function DashboardPage() {
             </div>
 
             <Button type="submit" isLoading={isLoading} className="w-full">
-              Submit Timesheet
+              Submit Hours
             </Button>
           </form>
         </div>

@@ -25,6 +25,8 @@ interface Timesheet {
   status: string;
   user: User;
   project: Project;
+  lastEditedBy: string | null;
+  lastEditedByName: string | null;
 }
 
 function getWeekDates(weekOffset: number = 0) {
@@ -135,7 +137,7 @@ export default function TimesheetsSummaryPage() {
 
   // Build the weekly grid data - now stores timesheet IDs for editing
   const buildWeeklyGrid = () => {
-    const grid: Record<string, Record<string, { hours: number; timesheetId: string | null }>> = {};
+    const grid: Record<string, Record<string, { hours: number; timesheetId: string | null; editedBy: string | null; projectId: string | null }>> = {};
 
     // Get week date keys for comparison
     const weekDateKeys = weekDates.map(d => getLocalDateKey(d));
@@ -144,13 +146,12 @@ export default function TimesheetsSummaryPage() {
     users.forEach(user => {
       grid[user.id] = {};
       weekDates.forEach(date => {
-        grid[user.id][getLocalDateKey(date)] = { hours: 0, timesheetId: null };
+        grid[user.id][getLocalDateKey(date)] = { hours: 0, timesheetId: null, editedBy: null, projectId: null };
       });
     });
 
     // Fill in timesheet data
     timesheets.forEach(ts => {
-      const tsDate = new Date(ts.date);
       // Use the date part from ISO string (this is how it's stored in DB)
       const dateKey = ts.date.split("T")[0];
 
@@ -160,13 +161,15 @@ export default function TimesheetsSummaryPage() {
           grid[ts.user.id] = {};
         }
         if (!grid[ts.user.id][dateKey]) {
-          grid[ts.user.id][dateKey] = { hours: 0, timesheetId: null };
+          grid[ts.user.id][dateKey] = { hours: 0, timesheetId: null, editedBy: null, projectId: null };
         }
         // Accumulate hours (in case of multiple entries per day)
         grid[ts.user.id][dateKey].hours += ts.hoursWorked;
         // Store the first timesheet ID for editing
         if (!grid[ts.user.id][dateKey].timesheetId) {
           grid[ts.user.id][dateKey].timesheetId = ts.id;
+          grid[ts.user.id][dateKey].editedBy = ts.lastEditedByName;
+          grid[ts.user.id][dateKey].projectId = ts.project.id;
         }
       }
     });
@@ -440,9 +443,16 @@ export default function TimesheetsSummaryPage() {
                                 className="w-16 px-1 py-1 text-center border border-primary rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             ) : (
-                              <span className={hours > 0 ? "font-semibold text-gray-900" : "text-gray-400"}>
-                                {hours > 0 ? hours : "-"}
-                              </span>
+                              <div className="flex flex-col items-center">
+                                <span className={hours > 0 ? "font-semibold text-gray-900" : "text-gray-400"}>
+                                  {hours > 0 ? hours : "-"}
+                                </span>
+                                {cell?.editedBy && hours > 0 && (
+                                  <span className="text-[10px] text-gray-400 italic truncate max-w-[70px]" title={cell.editedBy}>
+                                    {cell.editedBy.split(" ")[0]}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </td>
                         );
